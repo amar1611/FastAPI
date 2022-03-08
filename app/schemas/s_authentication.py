@@ -1,4 +1,3 @@
-from importlib_metadata import email
 from pydantic import BaseModel
 from typing import Optional
 
