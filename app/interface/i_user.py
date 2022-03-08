@@ -21,3 +21,11 @@ def show(id:int,db:Session):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'User with id: {id} not found in database')
     
     return user
+
+def delete_user(id:int,db:Session):
+    user = db.query(User).filter(User.id == id).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'User with id: {id} not found in database')
+    else:
+        db.delete(user)
+        db.commit()

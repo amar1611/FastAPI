@@ -17,3 +17,7 @@ def create_user(request: s_user.User, db: Session = Depends(get_db)):
 @router.get('/{id}', response_model=s_user.ShowUser)
 def get_user(id, db: Session = Depends(get_db)):
     return i_user.show(id, db)
+
+@router.delete('/{id}')
+def delete_user(id, db: Session = Depends(get_db)):
+    i_user.delete_user(id,db)
