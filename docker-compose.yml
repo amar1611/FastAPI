@@ -1,0 +1,63 @@
+version: '3.5'
+
+services:
+    db:
+        container_name: dev_pg
+        image: postgres:latest
+        restart: always
+        volumes: 
+            - ${POSTGRES__EXTERNAL__DATA_PATH}:/var/lib/postgresql/data
+        environment:
+            - POSTGRES_USER=${POSTGRES__INTERNAL__SUPERUSER_NAME}
+            - POSTGRES_PASSWORD=${POSTGRES__INTERNAL__SUPERUSER_PASSWORD}
+            - POSTGRES_DB=${POSTGRES__INTERNAL__DEFAULT_DB_NAME}
+        ports:
+            - 15432:5432
+        networks:
+            dqt_network:
+                ipv4_address: 172.25.0.101
+    
+    pgadmin:
+        container_name: dev_pgadmin4
+        image: dpage/pgadmin4:latest
+        restart: always
+        environment:
+            - PGADMIN_DEFAULT_EMAIL=${PGADMIN__INTERNAL__DEFAULT_EMAIL}
+            - PGADMIN_DEFAULT_PASSWORD=${PGADMIN__INTERNAL__DEFAULT_PASSWORD}
+        ports:
+            - 9081:80
+        networks:
+            dqt_network:
+                ipv4_address: 172.25.0.102
+
+    app-server:
+        container_name: dev_fastapi
+        build: ${BACKEND__EXTERNAL__ROOT}
+        image: fastapi_server:${VERSION}
+        restart: always
+        volumes: 
+            - ${BACKEND__EXTERNAL__ROOT}/app:${BACKEND__INTERNAL__ROOT}
+        environment:
+            - POSTGRES_USER=${POSTGRES__INTERNAL__SUPERUSER_NAME}
+            - POSTGRES_PASSWORD=${POSTGRES__INTERNAL__SUPERUSER_PASSWORD}
+            - POSTGRES_DATABASE=${POSTGRES__INTERNAL__DEFAULT_DB_NAME}
+            - POSTGRES_HOST=db
+            - POSTGRES_PORT=5432
+        ports: 
+            - 8080:8000
+        command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+        depends_on: 
+            - db
+        networks:
+            dqt_network:
+                ipv4_address: 172.25.0.103
+
+networks:
+    dqt_network:
+      name: dataquality_static
+      driver: bridge
+      ipam:
+        driver: default
+        config:
+          - subnet: 172.25.0.0/16
+            gateway: 172.25.0.1
